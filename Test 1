@@ -1,1 +1,382 @@
-print("Wilkommen, ich bin Prototype 0.8.")
+import os
+import time
+import random
+from datetime import datetime, timedelta
+
+def clear_chat():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+
+def schere_stein_papier():
+    while True:
+        clear_chat()
+        print("=== SCHERE STEIN PAPIER ===")
+        print("1. Schere")
+        print("2. Stein")
+        print("3. Papier")
+        print("\nENTER = zurück")
+
+        wahl = input("\nDeine Wahl: ")
+
+        if wahl == "":
+            return
+
+        if wahl not in ["1", "2", "3"]:
+            print("Ungültig!")
+            time.sleep(1)
+            continue
+
+        bot = random.choice(["1", "2", "3"])
+        optionen = {"1": "Schere", "2": "Stein", "3": "Papier"}
+
+        print("\nDu:", optionen[wahl])
+        print("Bot:", optionen[bot])
+
+        if wahl == bot:
+            print("Unentschieden!")
+        elif (wahl == "1" and bot == "3") or (wahl == "2" and bot == "1") or (wahl == "3" and bot == "2"):
+            print("Du hast gewonnen!")
+        else:
+            print("Du hast verloren!")
+
+        input("\nENTER = zurück")
+
+
+def tic_tac_toe():
+    human = "X"
+    bot = "O"
+
+    score_player = 0
+    score_bot = 0
+    score_draw = 0
+
+    def show_board(board):
+        clear_chat()
+        print("=== TIC TAC TOE ===\n")
+
+        print(f"{board[0]} | {board[1]} | {board[2]}")
+        print("--+---+--")
+        print(f"{board[3]} | {board[4]} | {board[5]}")
+        print("--+---+--")
+        print(f"{board[6]} | {board[7]} | {board[8]}\n")
+
+        print(f"Score: Spieler {score_player} | Bot {score_bot} | Unentschieden {score_draw}")
+        print("ENTER = zurück jederzeit\n")
+
+    def check_winner(board, p):
+        wins = [
+            (0,1,2),(3,4,5),(6,7,8),
+            (0,3,6),(1,4,7),(2,5,8),
+            (0,4,8),(2,4,6)
+        ]
+        return any(board[a] == board[b] == board[c] == p for a,b,c in wins)
+
+    def available(board):
+        return [i for i in range(9) if board[i] == " "]
+
+    def bot_move(board):
+        for i in available(board):
+            board[i] = bot
+            if check_winner(board, bot):
+                return
+            board[i] = " "
+
+        for i in available(board):
+            board[i] = human
+            if check_winner(board, human):
+                board[i] = bot
+                return
+            board[i] = " "
+
+        if board[4] == " ":
+            board[4] = bot
+            return
+
+        corners = [0,2,6,8]
+        random.shuffle(corners)
+        for i in corners:
+            if board[i] == " ":
+                board[i] = bot
+                return
+
+        board[random.choice(available(board))] = bot
+
+    while True:
+        board = [" " for _ in range(9)]
+
+        while True:
+            show_board(board)
+
+            move = input("Dein Zug (1-9, ENTER = zurück): ")
+
+            if move == "":
+                return
+
+            if not move.isdigit() or int(move) not in range(1, 10):
+                print("Ungültig!")
+                time.sleep(1)
+                continue
+
+            idx = int(move) - 1
+
+            if board[idx] != " ":
+                print("Feld belegt!")
+                time.sleep(1)
+                continue
+
+            board[idx] = human
+
+            if check_winner(board, human):
+                show_board(board)
+                print("Du hast gewonnen!")
+                score_player += 1
+                break
+
+            if " " not in board:
+                show_board(board)
+                print("Unentschieden!")
+                score_draw += 1
+                break
+
+            bot_move(board)
+
+            if check_winner(board, bot):
+                show_board(board)
+                print("Bot hat gewonnen!")
+                score_bot += 1
+                break
+
+        input("\nENTER = zurück")
+
+
+archive = []
+
+def archiv():
+
+    def show_table():
+        clear_chat()
+        print("=== ARCHIV TABELLE ===\n")
+
+        if not archive:
+            print("Keine Einträge.\n")
+        else:
+            print(f"{'Nr':<4} {'Name':<12} {'Art':<10} {'Länge':<8} {'Grund':<12} {'Start':<12} {'Ende':<12}")
+            print("-" * 85)
+
+            for i, a in enumerate(archive, 1):
+                print(f"{i:<4} {a['name']:<12} {a['art']:<10} {a['laenge']:<8} {a['grund']:<12} {a['start']:<12} {a['ende']:<12}")
+
+        input("\nENTER = zurück")
+
+    def delete_expired():
+        today = datetime.now()
+        removed = 0
+
+        for a in archive[:]:
+            if datetime.strptime(a["ende"], "%d.%m.%Y") < today:
+                archive.remove(a)
+                removed += 1
+
+        print(f"\n{removed} abgelaufene Einträge gelöscht!")
+        input("\nENTER = zurück")
+
+    while True:
+        clear_chat()
+        print("=== ARCHIV ===\n")
+        print("1. Eintrag hinzufügen")
+        print("2. Eintrag löschen")
+        print("3. Abgelaufene löschen")
+        print("4. Tabelle anzeigen")
+        print("\nENTER = zurück")
+
+        wahl = input("\nWähle: ")
+
+        if wahl == "":
+            return
+
+        if wahl == "1":
+            clear_chat()
+            print("=== NEUER EINTRAG ===\n")
+
+            name = input("Name: ")
+            art = input("Art: ")
+            laenge = input("Länge (Tage): ")
+            grund = input("Grund: ")
+
+            start_date = datetime.now()
+            start = start_date.strftime("%d.%m.%Y")
+
+            try:
+                days = int(laenge)
+            except:
+                days = 0
+
+            ende = (start_date + timedelta(days=days)).strftime("%d.%m.%Y")
+
+            archive.append({
+                "name": name,
+                "art": art,
+                "laenge": laenge,
+                "grund": grund,
+                "start": start,
+                "ende": ende
+            })
+
+            print("\nGespeichert!")
+            input("\nENTER = zurück")
+
+        elif wahl == "2":
+            clear_chat()
+            print("=== LÖSCHEN ===\n")
+
+            if not archive:
+                input("Keine Einträge. ENTER")
+                continue
+
+            for i, a in enumerate(archive, 1):
+                print(f"{i}. {a['name']}")
+
+            delete = input("\nNummer löschen (ENTER = zurück): ")
+
+            if delete == "":
+                continue
+
+            if delete.isdigit():
+                idx = int(delete) - 1
+                if 0 <= idx < len(archive):
+                    archive.pop(idx)
+
+            input("\nENTER = zurück")
+
+        elif wahl == "3":
+            delete_expired()
+
+        elif wahl == "4":
+            show_table()
+
+
+def todo():
+    tasks = []
+
+    while True:
+        clear_chat()
+        print("=== TO-DO LISTE ===")
+        print("1. Aufgabe hinzufügen")
+        print("2. Aufgaben anzeigen")
+        print("3. Aufgabe löschen")
+        print("\nENTER = zurück")
+
+        wahl = input("\nWähle: ")
+
+        if wahl == "":
+            return
+
+        if wahl == "1":
+            task = input("Neue Aufgabe: ")
+            tasks.append(task)
+            print("Gespeichert!")
+            input("\nENTER")
+
+        elif wahl == "2":
+            clear_chat()
+            print("=== AUFGABEN ===")
+
+            if not tasks:
+                print("Keine Aufgaben.")
+            else:
+                for i, t in enumerate(tasks, 1):
+                    print(f"{i}. {t}")
+
+            input("\nENTER = zurück")
+
+        elif wahl == "3":
+            clear_chat()
+            print("=== AUFGABE LÖSCHEN ===\n")
+
+            if not tasks:
+                input("Keine Aufgaben. ENTER = zurück")
+                continue
+
+            for i, t in enumerate(tasks, 1):
+                print(f"{i}. {t}")
+
+            delete = input("\nNummer löschen (ENTER = zurück): ")
+
+            if delete == "":
+                continue
+
+            if not delete.isdigit():
+                print("Ungültig!")
+                time.sleep(1)
+                continue
+
+            idx = int(delete) - 1
+
+            if idx < 0 or idx >= len(tasks):
+                print("Nicht gefunden!")
+                time.sleep(1)
+                continue
+
+            removed = tasks.pop(idx)
+            print(f"\nGelöscht: {removed}")
+            input("\nENTER = zurück")
+
+
+def chat_leeren():
+    clear_chat()
+    print("Chat wird geleert...")
+
+    for i in range(3, 0, -1):
+        clear_chat()
+        print(f"Chat wird geleert in {i}...")
+        time.sleep(1)
+
+    clear_chat()
+    print("Chat wurde geleert!")
+    input("\nENTER = zurück")
+
+
+def games():
+    while True:
+        clear_chat()
+        print("=== GAMES ===")
+        print("1. Schere Stein Papier")
+        print("2. Tic Tac Toe")
+        print("\nENTER = zurück")
+
+        wahl = input("\nWähle: ")
+
+        if wahl == "":
+            return
+
+        if wahl == "1":
+            schere_stein_papier()
+        elif wahl == "2":
+            tic_tac_toe()
+
+
+def main_menu():
+    while True:
+        clear_chat()
+        print("=== TEST-BOT 1.5 ===")
+        print("1. Games")
+        print("2. Archiv")
+        print("3. To-Do Liste")
+        print("4. Chat Leeren")
+        print("5. Beenden")
+
+        wahl = input("\nWähle: ")
+
+        if wahl == "1":
+            games()
+        elif wahl == "2":
+            archiv()
+        elif wahl == "3":
+            todo()
+        elif wahl == "4":
+            chat_leeren()
+        elif wahl == "5":
+            break
+
+
+main_menu()
